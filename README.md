@@ -12,7 +12,7 @@ simple drug selling for the framework QBCore for fivem
 
 [***Preview Video***](https://streamable.com/vde9y0)
 
-[***Discord ***](https://discord.gg/DxdxvTrjxP)
+[***Discord***](https://discord.gg/DxdxvTrjxP)
 
 
 

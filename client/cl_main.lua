@@ -273,7 +273,7 @@ function targetPed(ped)
                                     ClearPedTasksImmediately(entity)
                                     lastPed[#lastPed + 1] = entity
                                     exports['qb-target']:RemoveZone('sellingPed')
-                                    print("calling police retard")
+                                   -- print("calling police")
                                     AlertoPoliciaChanceThing()
                                 end,
                             },
@@ -288,7 +288,7 @@ function targetPed(ped)
                                     ClearPedTasksImmediately(entity)
                                     lastPed[#lastPed + 1] = entity
                                     exports['qb-target']:RemoveZone('sellingPed')
-                                    print("calling police retard for delcline")
+                                   -- print("calling police for delcline")
                                     AlertoPoliciaChanceThingDelcine()
                                 end,
                             },

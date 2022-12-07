@@ -35,3 +35,5 @@ simple drug selling for the framework QBCore for fivem
 ***2. QB-Target***
 
 ***3. PS-Dispatch - this can be edited in cl_client line 314 if you have a different alert system***
+
+***Original Script - https://github.com/qbcore-framework/qb-drugs***

@@ -2,9 +2,11 @@ Config  = Config or {}
 
 Config.PoliceNeeded = 0 --// Amount of police needed for player to able to start talking to ped
 
-Config.CallPoliceChance = 50 --// This here is the chance of calling the police on each sale
+--// This here is the chance of calling the police on each sale
+Config.CallPoliceChance = 0
 
-Config.CallPoliceOnDeclineChance = 100 --// This here is the chance of calling the police on each Decline
+--// This here is the chance of calling the police on each Decline
+Config.CallPoliceOnDeclineChance = 100
 
 --// Drugs to sell
 Config.Drugs = {
@@ -31,8 +33,8 @@ Config.DrugsPrice = {
 
 
 --// Locations to sell drugs at
-Config.Locations = { 
-    [1] = {id = 1, name = "Vinewood",  coords = vector3(101.36, 318.54, 112.09), blipradius = 70.0, blipcolor = 42, blipalpha = 200}, 
+Config.Locations = {
+    [1] = {id = 1, name = "Vinewood",  coords = vector3(101.36, 318.54, 112.09), blipradius = 70.0, blipcolor = 42, blipalpha = 200},
     [2] = {id = 2, name = "Forum Drive",  coords = vector3(-167.58, -1666.75, 33.08), blipradius = 70.0, blipcolor = 42, blipalpha = 200},
     [3] = {id = 3, name = "Little Seoul", coords = vector3(-656.74, -892.44, 24.71), blipradius = 70.0,  blipcolor = 42, blipalpha = 200},
     [4] = {id = 4, name = "The Richmonds Hotel", coords = vector3(-1255.15, 244.5, 63.09), blipradius = 70.0, blipcolor = 42, blipalpha = 200},
@@ -63,7 +65,7 @@ Config.PedLabelTargetStopSell = "Stop Working!" --// Label for ped target to sto
 --// Menu Stuff
 
 Config.MenuHeader = "Pick a location" --// Start Selling Menu Header Message
-Config.MenuHeaderText = "You will only be able to awll drugs in the area you select" --// Start Selling Menu Header Warning Text 
+Config.MenuHeaderText = "You will only be able to awll drugs in the area you select" --// Start Selling Menu Header Warning Text
 Config.StopSellingName = "Stop Working" --// Text that shows in menu to stop working
 
 
@@ -94,4 +96,4 @@ Config.DeclineSellDrugNotifyTime = 7500 --// Time Notify For Decline selling dru
 
 --// Warning please read the message at the end of this config
 
-Config.Debug = false --// Command to open sell menu enabling this enables it for EVERYONE even permision group users
+Config.Debug = true --// Command to open sell menu enabling this enables it for EVERYONE even permision group users

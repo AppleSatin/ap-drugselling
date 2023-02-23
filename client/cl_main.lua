@@ -8,7 +8,7 @@ local CurrentCops = 0
 local AnimDict = Config.DrugSellingAnimDic
 local Anim = Config.DrugSellingAnim
 
---// Function 
+--// Function
 
 local function LoadAnimDict(dict)
     RequestAnimDict(dict)
@@ -17,63 +17,59 @@ local function LoadAnimDict(dict)
     end
 end
 
+local staredselling = false
+
 --// Spawn Ped anad Ped target once near Ped
 CreateThread(function()
     RequestModel(Config.PedModel)
     while not HasModelLoaded(Config.PedModel) do
         Wait(1)
     end
-    local created_ped = CreatePed(0, Config.PedModel , Config.PedStartCoords.x, Config.PedStartCoords.y, Config.PedStartCoords.z -1, true)
+    local created_ped = CreatePed(0, Config.PedModel, Config.PedStartCoords.x, Config.PedStartCoords.y,
+        Config.PedStartCoords.z - 1, true)
     FreezeEntityPosition(created_ped, true)
     SetEntityHeading(created_ped, Config.PedStartCoords.w)
     SetEntityInvincible(created_ped, true)
     SetBlockingOfNonTemporaryEvents(created_ped, true)
     TaskStartScenarioInPlace(created_ped, Config.PedModelAnim, 0, true)
-
-    while true do
-        Wait(0)
-        local ped = PlayerPedId()
-        local coords = GetEntityCoords(ped)
-        local dist = #(vector3(coords.x,coords.y,coords.z) - vector3(Config.PedStartCoords.x,Config.PedStartCoords.y,Config.PedStartCoords.z))
-        if dist < 2.5 then
-            if not Started then 
-                for k, v in pairs(Config.Locations) do
-                    exports['qb-target']:AddTargetModel(Config.PedModel, {
-                        options = {
-                            {
-                                type = 'client',
-                                event = "apple:start:sell:PoliceCheck",
-                                icon = Config.PedIconTarget,
-                                label = Config.PedLabelTarget,
-                            },
-                            {
-                                type = 'client',
-                                event = "apple:start:sell:Stop",
-                                icon = Config.PedIconTargetStopSell,
-                                label = Config.PedLabelTargetStopSell,
-                            }
-                        },
-                        distance = 2.0, 
-                    })
-                end
-            end	
-            -- do shit
-        else
-            Wait(1500)
-        end
+    for k, v in pairs(Config.Locations) do
+        exports['qb-target']:AddTargetEntity(created_ped, {
+            options = {
+                {
+                    type = 'client',
+                    event = "apple:start:sell:PoliceCheck",
+                    icon = Config.PedIconTarget,
+                    label = Config.PedLabelTarget,
+                    canInteract = function()
+                        return not staredselling
+                    end
+                },
+                {
+                    type = 'client',
+                    event = "apple:start:sell:Stop",
+                    icon = Config.PedIconTargetStopSell,
+                    label = Config.PedLabelTargetStopSell,
+                    canInteract = function()
+                        return staredselling
+                    end
+                }
+            },
+            distance = 2.0,
+        })
     end
 end)
 
---// Function to stop selling 
+--// Function to stop selling
 
 RegisterNetEvent("apple:start:sell:Stop", function()
+    staredselling = false
     Started = false
     hasTarget = false
 end)
 
---// Function to set cop count client sided 
+--// Function to set cop count client sided
 
-RegisterNetEvent('police:SetCopCount', function(amount)
+RegisterNetEvent('police:copCount', function(amount)
     CurrentCops = amount
 end)
 
@@ -89,8 +85,9 @@ RegisterNetEvent("apple:start:sell:Menu", function()
             },
         }
         for k, v in pairs(Config.Locations) do
-            MenuOptions[#MenuOptions+1] = { --// fww
-                header = "<h8>"..v.name.."</h>",
+            MenuOptions[#MenuOptions + 1] = {
+                --// fww
+                header = "<h8>" .. v.name .. "</h>",
                 params = {
                     event = "apple:start:sell",
                     args = {
@@ -99,17 +96,17 @@ RegisterNetEvent("apple:start:sell:Menu", function()
                 }
             }
         end
-            exports['qb-menu']:openMenu(MenuOptions)
-        end
-  end)
+        exports['qb-menu']:openMenu(MenuOptions)
+    end
+end)
 
 
---// Police Neeeded Chance 
-
+--// Police Needed Chance
 RegisterNetEvent("apple:start:sell:PoliceCheck", function()
     if CurrentCops >= Config.PoliceNeeded then
+        staredselling = true
         TriggerEvent("apple:start:sell:Menu")
-    else 
+    else
         QBCore.Functions.Notify(Config.NoPoliceNotify, 'error', Config.NoPoliceNotifyTime)
     end
 end)
@@ -117,7 +114,6 @@ end)
 --// Blips Stuff Below
 
 local function CreateBlip(coords, blipradius, alpha, color)
-
     local ZoneBlip = AddBlipForRadius(coords.x, coords.y, coords.z, blipradius)
     SetBlipHighDetail(ZoneBlip, true)
     SetBlipColour(ZoneBlip, color)
@@ -127,7 +123,8 @@ local function CreateBlip(coords, blipradius, alpha, color)
     while alpha ~= 0 do
         if not Started then
             RemoveBlip(ZoneBlip)
-        else end
+        else
+        end
         Citizen.Wait(500)
         alpha = alpha - 1
         SetBlipAlpha(ZoneBlip, alpha)
@@ -141,27 +138,26 @@ end
 
 if Config.Debug then
     RegisterCommand('selltest', function()
-         TriggerEvent('apple:start:sell:Menu')
+        TriggerEvent('apple:start:sell:Menu')
     end)
 end
 
 --// Event for starting selling at location One
 
 RegisterNetEvent("apple:start:sell", function(args)
-  --  print(args.id)
     local id = tonumber(args.id)
     if Started == false then
         for i = 1, #Config.Locations do
             getLocation(id)
             QBCore.Functions.Notify(Config.JobStartedHeadToLoc, 'success', Config.JobStartedHeadToLocTextTime)
             Started = true
-            bliploction = CreateBlip(Config.Locations[id].coords,  Config.Locations[id].blipradius, Config.Locations[id].blipalpha, Config.Locations[id].blipcolor)
+            bliploction = CreateBlip(Config.Locations[id].coords, Config.Locations[id].blipradius,
+                Config.Locations[id].blipalpha, Config.Locations[id].blipcolor)
         end
     end
 end)
 
 function getLocation(id)
-  --  print(id)
     CreateThread(function()
         while true do
             Wait(5000)
@@ -169,7 +165,7 @@ function getLocation(id)
             local pCoords = GetEntityCoords(ped)
             for i = 1, #Config.Locations do
                 local coords = Config.Locations[id].coords
-                local dist = #(pCoords - coords) -- Use this
+                local dist = #(pCoords - coords)
 
                 if dist < Config.Locations[id].blipradius then
                     movePed()
@@ -201,9 +197,12 @@ function movePed()
     end)
 end
 
+local addpedshit = {}
+
+local soldped = {}
+
 function targetPed(ped)
     QBCore.Functions.TriggerCallback('apple:start:sell:getAvailableDrugs', function(result)
-      --  print(result)
         if result then
             availableDrugs = result
             hasTarget = true
@@ -245,56 +244,64 @@ function targetPed(ped)
                 local drugType = math.random(1, #availableDrugs)
                 local bagAmount = math.random(1, availableDrugs[drugType].amount)
                 if bagAmount > 15 then bagAmount = math.random(9, 15) end
-            
+
                 currentOfferDrug = availableDrugs[drugType]
-            
+
                 local ddata = Config.DrugsPrice[currentOfferDrug.item]
                 local randomPrice = math.random(ddata.min, ddata.max) * bagAmount
 
 
                 if pedDist2 < 1.5 then
-                    exports['qb-target']:AddEntityZone('sellingPed', ped, {
-                        name = 'sellingPed',
-                        debugPoly = false,
-                    }, {
-                        options = {
-                            {
-                                icon = 'fas fa-hand-holding-dollar',
-                                label = bagAmount ..'x ' ..currentOfferDrug.label .. ' for $'..randomPrice,
-                                action = function(entity)
-                                    TriggerServerEvent('ap-drugselling:server:sellCornerDrugs', drugType, bagAmount, randomPrice)
-                                    hasTarget = false
-                                    LoadAnimDict(AnimDict)
-                                    TaskPlayAnim(PlayerPedId(), AnimDict, Anim, 3.0, 3.0, -1, 49, 0, 0, 0, 0)
-                                    Wait(650)
-                                    ClearPedTasks(PlayerPedId())
-                                    SetPedKeepTask(entity, false)
-                                    SetEntityAsNoLongerNeeded(entity)
-                                    ClearPedTasksImmediately(entity)
-                                    lastPed[#lastPed + 1] = entity
-                                    exports['qb-target']:RemoveZone('sellingPed')
-                                   -- print("calling police")
-                                    AlertoPoliciaChanceThing()
-                                end,
+                    if not addpedshit[ped] then
+                        addpedshit[ped] = true
+                        exports['qb-target']:AddTargetEntity(ped, {
+                            options = {
+                                {
+                                    id = 1,
+                                    icon = 'fas fa-hand-holding-dollar',
+                                    label = bagAmount .. 'x ' .. currentOfferDrug.label .. ' for $' .. randomPrice,
+                                    action = function(entity)
+                                        TriggerServerEvent('ap-drugselling:server:sellCornerDrugs', drugType, bagAmount,
+                                            randomPrice)
+                                        hasTarget = false
+                                        LoadAnimDict(AnimDict)
+                                        TaskPlayAnim(PlayerPedId(), AnimDict, Anim, 3.0, 3.0, -1, 49, 0, 0, 0, 0)
+                                        Wait(650)
+                                        ClearPedTasks(PlayerPedId())
+                                        SetPedKeepTask(entity, false)
+                                        SetEntityAsNoLongerNeeded(entity)
+                                        ClearPedTasksImmediately(entity)
+                                        lastPed[#lastPed + 1] = entity
+                                        soldped[entity] = true
+                                        AlertoPoliciaChanceThing()
+                                    end,
+                                    canInteract = function(entity)
+                                        return not soldped[entity]
+                                    end,
+                                },
+                                {
+                                    id = 2,
+                                    icon = 'fas fa-x',
+                                    label = 'Decline offer',
+                                    action = function(entity)
+                                        QBCore.Functions.Notify(Config.DeclineSellDrugNotify, 'error',
+                                            Config.DeclineSellDrugNotifyTime)
+                                        hasTarget = false
+                                        SetPedKeepTask(entity, false)
+                                        SetEntityAsNoLongerNeeded(entity)
+                                        ClearPedTasksImmediately(entity)
+                                        lastPed[#lastPed + 1] = entity
+                                        soldped[entity] = true
+                                        AlertoPoliciaChanceThingDelcine()
+                                    end,
+                                    canInteract = function(entity)
+                                        return not soldped[entity]
+                                    end,
+                                },
                             },
-                            {
-                                icon = 'fas fa-x',
-                                label = 'Decline offer',
-                                action = function(entity)
-                                  QBCore.Functions.Notify(Config.DeclineSellDrugNotify, 'error', Config.DeclineSellDrugNotifyTime)
-                                    hasTarget = false
-                                    SetPedKeepTask(entity, false)
-                                    SetEntityAsNoLongerNeeded(entity)
-                                    ClearPedTasksImmediately(entity)
-                                    lastPed[#lastPed + 1] = entity
-                                    exports['qb-target']:RemoveZone('sellingPed')
-                                   -- print("calling police for delcline")
-                                    AlertoPoliciaChanceThingDelcine()
-                                end,
-                            },
-                        },
-                        distance = 1.5,
-                    })
+                            distance = 1.5,
+                        })
+                    end
                 end
                 Wait(0)
             end
@@ -310,22 +317,23 @@ AddEventHandler("onResourceStop", function(resourceName)
     end
 end)
 
-
---// Call polcie stuff
-
-local chance = math.random(1, 100)
-
 --// Functions to call police chance you can edit line 9 and line 16 to the dispatch you use defualt ps-dispatch
 
-function AlertoPoliciaChanceThing() --// Chance to call police on sale 
-	if chance < Config.CallPoliceOnDeclineChance then
+function AlertoPoliciaChanceThing() --// Chance to call police on sale
+    if Config.CallPoliceChance == 0 then return end
+    if Config.CallPoliceChance == 100 then return exports['ps-dispatch']:DrugSale() end
+    local policeChance = math.random(1, 100)
+    if policeChance <= Config.CallPoliceOnDeclineChance then
         exports['ps-dispatch']:DrugSale()
     end
 end
 
 --// Function to call police if player declines drug sale
-function AlertoPoliciaChanceThingDelcine() --// Chance to call police on cancelling sale 
-	if chance < Config.CallPoliceOnDeclineChance then
+function AlertoPoliciaChanceThingDelcine() --// Chance to call police on cancelling sale
+    if Config.CallPoliceOnDeclineChance == 0 then return end
+    if Config.CallPoliceOnDeclineChance == 100 then return exports['ps-dispatch']:DrugSale() end
+    local policeChance = math.random(1, 100)
+    if policeChance <= Config.CallPoliceOnDeclineChance then
         exports['ps-dispatch']:DrugSale()
     end
 end

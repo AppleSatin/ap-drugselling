@@ -45,3 +45,23 @@ RegisterNetEvent('ap-drugselling:server:sellCornerDrugs', function(drugType, amo
         print("Drug Aval :",availableDrugs)
     end
 end)
+
+local function GetCurrentCops()
+    local amount = 0
+    local players = QBCore.Functions.GetQBPlayers()
+    for _, v in pairs(players) do
+        if v and v.PlayerData.job.name == "police" then
+            amount += 1
+        end
+    end
+    return amount
+end
+
+-- Threads
+CreateThread(function()
+    while true do
+        Wait(1000 * 60 * 10)
+        local curCops = GetCurrentCops()
+        TriggerClientEvent("police:copCount", -1, curCops)
+    end
+end)

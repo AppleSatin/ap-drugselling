@@ -8,29 +8,26 @@ Config.CallPoliceChance = 0
 --// This here is the chance of calling the police on each Decline
 Config.CallPoliceOnDeclineChance = 100
 
+Config.police_percent = false --// default false set to true if you want to Uses percent_polices % value to times the decimal by the math random value
+
 --// Drugs to sell
 Config.Drugs = {
-    "oxy",
-    "weed_skunk",
-    "weed_amnesia"
-}
-
---// Drugs to sell prices
-Config.DrugsPrice = {
     ["oxy"] = {
         min = 15,
-        max = 24,
+        max = 15,
+        percent_police = 50,
     },
     ["weed_skunk"] = {
         min = 15,
         max = 28,
+        percent_police = 1,
     },
     ["weed_amnesia"] = {
         min = 15,
         max = 31,
+        percent_police = 1,
     }
 }
-
 
 --// Locations to sell drugs at
 Config.Locations = {
@@ -41,12 +38,9 @@ Config.Locations = {
     [5] = {id = 5, name = "Airport", coords = vector3(-942.98, -2579.21, 13.96), blipradius = 70.0, blipcolor = 42, blipalpha = 200},
 }
 
-
 --// Drug Selling Animations
-
 Config.DrugSellingAnimDic = "gestures@f@standing@casual" --// Anim Dic Ignore this if you dont know what your doing with changing Anims
 Config.DrugSellingAnim = "gesture_point" --// Anim Dic Ignore this if you dont know what your doing with changing Anims
-
 
 --// Ped Starting Stuff Below
 Config.PedModel = "a_m_y_golfer_01" --// Ped start drug selling  can find list here https://docs.fivem.net/docs/game-references/ped-models/
@@ -60,20 +54,14 @@ Config.PedLabelTarget = "Talk to Stranger" --// Label for ped target
 Config.PedIconTargetStopSell = "fas fa-user-secret" --// Icon for ped target to stop selling
 Config.PedLabelTargetStopSell = "Stop Working!" --// Label for ped target to stop selling
 
-
-
 --// Menu Stuff
-
 Config.MenuHeader = "Pick a location" --// Start Selling Menu Header Message
 Config.MenuHeaderText = "You will only be able to awll drugs in the area you select" --// Start Selling Menu Header Warning Text
 Config.StopSellingName = "Stop Working" --// Text that shows in menu to stop working
 
-
 --// Notify Stuff
-
 Config.NoPoliceNotify = "Not enough police" --// Alert for when starting run returns not enough police
 Config.NoPoliceNotifyTime = 7500 --// Alert for when not enough police
-
 
 Config.JobStartedHeadToLoc = "Head to the Location!" --// Notify that pops up when a player selected a locations
 Config.JobStartedHeadToLocTextTime = 7500 --// Time for Notify when a player selected a locations
@@ -90,10 +78,5 @@ Config.JobAlreadyNotWorkingNotifyTextTime = 7500 --// Time for Notify that pops 
 Config.DeclineSellDrugNotify = "You declined Drug offer seems like they migth have called the police!" --// Notify For Decline selling drugs
 Config.DeclineSellDrugNotifyTime = 7500 --// Time Notify For Decline selling drugs
 
-
-
-
-
 --// Warning please read the message at the end of this config
-
-Config.Debug = true --// Command to open sell menu enabling this enables it for EVERYONE even permision group users
+Config.Debug = false --// Command to open sell menu enabling this enables it for EVERYONE even permision group users

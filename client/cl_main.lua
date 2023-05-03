@@ -1,23 +1,14 @@
-QBCore = exports['qb-core']:GetCoreObject()
+local QBCore = exports['qb-core']:GetCoreObject()
 
-ZoneBlip = 0
-hasTarget = false
-local lastPed = {}
+local hasTarget = false
+local staredselling = false
+local last_ped = {}
+local ped_table = {}
+local sold_ped = {}
 local Started = false
 local CurrentCops = 0
 local AnimDict = Config.DrugSellingAnimDic
 local Anim = Config.DrugSellingAnim
-
---// Function
-
-local function LoadAnimDict(dict)
-    RequestAnimDict(dict)
-    while not HasAnimDictLoaded(dict) do
-        Wait(0)
-    end
-end
-
-local staredselling = false
 
 --// Spawn Ped anad Ped target once near Ped
 CreateThread(function()
@@ -69,7 +60,7 @@ end)
 
 --// Function to set cop count client sided
 
-RegisterNetEvent('police:copCount', function(amount)
+RegisterNetEvent('ap-drugselling:police:copCount', function(amount)
     CurrentCops = amount
 end)
 
@@ -143,7 +134,6 @@ if Config.Debug then
 end
 
 --// Event for starting selling at location One
-
 RegisterNetEvent("apple:start:sell", function(args)
     local id = tonumber(args.id)
     if Started == false then
@@ -176,7 +166,6 @@ function getLocation(id)
 end
 
 function movePed()
-    local startLocation = GetEntityCoords(PlayerPedId())
     CreateThread(function()
         while hasTarget == false do
             local player = PlayerPedId()
@@ -197,18 +186,14 @@ function movePed()
     end)
 end
 
-local addpedshit = {}
-
-local soldped = {}
-
 function targetPed(ped)
     QBCore.Functions.TriggerCallback('apple:start:sell:getAvailableDrugs', function(result)
         if result then
             availableDrugs = result
             hasTarget = true
 
-            for i = 1, #lastPed, 1 do
-                if lastPed[i] == ped then
+            for i = 1, #last_ped, 1 do
+                if last_ped[i] == ped then
                     hasTarget = false
                     return
                 end
@@ -217,17 +202,17 @@ function targetPed(ped)
             SetEntityAsNoLongerNeeded(ped)
             ClearPedTasks(ped)
 
-            local coords = GetEntityCoords(PlayerPedId(), true)
-            local pedCoords = GetEntityCoords(ped)
-            local pedDist = #(coords - pedCoords)
+            local player_coords = GetEntityCoords(PlayerPedId(), true)
+            local ped_coords = GetEntityCoords(ped)
+            local ped_dist = #(player_coords - ped_coords)
 
-            TaskGoStraightToCoord(ped, coords, 15.0, -1, 0.0, 0.0)
+            TaskGoStraightToCoord(ped, player_coords, 15.0, -1, 0.0, 0.0)
 
-            while pedDist > 1.5 do
-                coords = GetEntityCoords(PlayerPedId(), true)
-                pedCoords = GetEntityCoords(ped)
-                TaskGoStraightToCoord(ped, coords, 1.2, -1, 0.0, 0.0)
-                pedDist = #(coords - pedCoords)
+            while ped_dist > 1.5 do
+                player_coords = GetEntityCoords(PlayerPedId(), true)
+                ped_coords = GetEntityCoords(ped)
+                TaskGoStraightToCoord(ped, player_coords, 1.2, -1, 0.0, 0.0)
+                ped_dist = #(player_coords - ped_coords)
                 Wait(100)
             end
 
@@ -235,25 +220,31 @@ function targetPed(ped)
             TaskTurnPedToFaceEntity(ped, PlayerPedId(), 5500)
             TaskStartScenarioInPlace(ped, "WORLD_HUMAN_STAND_IMPATIENT_UPRIGHT", 0, false)
 
-            while pedDist < 1.5 and not IsPedDeadOrDying(ped) do
-                local coords2 = GetEntityCoords(PlayerPedId(), true)
-                local pedCoords2 = GetEntityCoords(ped)
-                local pedDist2 = #(coords2 - pedCoords2)
+            while ped_dist < 1.5 and not IsPedDeadOrDying(ped) do
+                local player_coords = GetEntityCoords(PlayerPedId(), true)
+                local target_ped_coords = GetEntityCoords(ped)
+                local ped_distance = #(player_coords - target_ped_coords)
 
 
                 local drugType = math.random(1, #availableDrugs)
                 local bagAmount = math.random(1, availableDrugs[drugType].amount)
                 if bagAmount > 15 then bagAmount = math.random(9, 15) end
-
+                
                 currentOfferDrug = availableDrugs[drugType]
 
-                local ddata = Config.DrugsPrice[currentOfferDrug.item]
-                local randomPrice = math.random(ddata.min, ddata.max) * bagAmount
-
-
-                if pedDist2 < 1.5 then
-                    if not addpedshit[ped] then
-                        addpedshit[ped] = true
+                local ddata = Config.Drugs[currentOfferDrug.item]
+                local randomPrice
+                
+                if Config.police_percent then
+                    local percentPolice = ddata.percent_police / 100
+                    randomPrice = math.random(ddata.min, ddata.max) * bagAmount * (1 + (percentPolice * CurrentCops))
+                else
+                    randomPrice = math.random(ddata.min, ddata.max) * bagAmount
+                end
+                
+                if ped_distance < 1.5 then
+                    if not ped_table[ped] then
+                        ped_table[ped] = true
                         exports['qb-target']:AddTargetEntity(ped, {
                             options = {
                                 {
@@ -261,8 +252,7 @@ function targetPed(ped)
                                     icon = 'fas fa-hand-holding-dollar',
                                     label = bagAmount .. 'x ' .. currentOfferDrug.label .. ' for $' .. randomPrice,
                                     action = function(entity)
-                                        TriggerServerEvent('ap-drugselling:server:sellCornerDrugs', drugType, bagAmount,
-                                            randomPrice)
+                                        TriggerServerEvent('ap-drugselling:server:sellCornerDrugs', drugType, bagAmount, randomPrice)
                                         hasTarget = false
                                         LoadAnimDict(AnimDict)
                                         TaskPlayAnim(PlayerPedId(), AnimDict, Anim, 3.0, 3.0, -1, 49, 0, 0, 0, 0)
@@ -271,12 +261,12 @@ function targetPed(ped)
                                         SetPedKeepTask(entity, false)
                                         SetEntityAsNoLongerNeeded(entity)
                                         ClearPedTasksImmediately(entity)
-                                        lastPed[#lastPed + 1] = entity
-                                        soldped[entity] = true
+                                        last_ped[#last_ped + 1] = entity
+                                        sold_ped[entity] = true
                                         AlertoPoliciaChanceThing()
                                     end,
                                     canInteract = function(entity)
-                                        return not soldped[entity]
+                                        return not sold_ped[entity]
                                     end,
                                 },
                                 {
@@ -290,12 +280,12 @@ function targetPed(ped)
                                         SetPedKeepTask(entity, false)
                                         SetEntityAsNoLongerNeeded(entity)
                                         ClearPedTasksImmediately(entity)
-                                        lastPed[#lastPed + 1] = entity
-                                        soldped[entity] = true
+                                        last_ped[#last_ped + 1] = entity
+                                        sold_ped[entity] = true
                                         AlertoPoliciaChanceThingDelcine()
                                     end,
                                     canInteract = function(entity)
-                                        return not soldped[entity]
+                                        return not sold_ped[entity]
                                     end,
                                 },
                             },
@@ -309,16 +299,7 @@ function targetPed(ped)
     end)
 end
 
-AddEventHandler("onResourceStop", function(resourceName)
-    if resourceName == "ap-drugselling" then
-        if DoesBlipExist(bliploction) then
-            RemoveBlip(bliploction)
-        end
-    end
-end)
-
 --// Functions to call police chance you can edit line 9 and line 16 to the dispatch you use defualt ps-dispatch
-
 function AlertoPoliciaChanceThing() --// Chance to call police on sale
     if Config.CallPoliceChance == 0 then return end
     if Config.CallPoliceChance == 100 then return exports['ps-dispatch']:DrugSale() end
@@ -337,3 +318,19 @@ function AlertoPoliciaChanceThingDelcine() --// Chance to call police on cancell
         exports['ps-dispatch']:DrugSale()
     end
 end
+
+--// LoadAnimDict to reqeust and check if the anin has loaded
+function LoadAnimDict(dict)
+    RequestAnimDict(dict)
+    while not HasAnimDictLoaded(dict) do
+        Wait(0)
+    end
+end
+
+AddEventHandler("onResourceStop", function(resourceName)
+    if resourceName == "ap-drugselling" then
+        if DoesBlipExist(bliploction) then
+            RemoveBlip(bliploction)
+        end
+    end
+end)

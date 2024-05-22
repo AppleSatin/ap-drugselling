@@ -1,4 +1,4 @@
-# ap-drugselling
+# VERY OLD DO NOT RECOMMEND USING
 simple drug selling for the framework QBCore for fivem
 
 
